@@ -12,8 +12,14 @@ from models import (
     ListDocumentsResponse,
     GetDocumentResponse,
     DocumentChunk,
-    DocumentInfo
+    DocumentInfo,
+    QuestionAnswer
 )
+from dotenv import load_dotenv
+import logging
+import os
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize the RAG database
 rag_db = RAGDatabase()

@@ -10,73 +10,175 @@ A Retrieval Augmented Generation (RAG) server implementing the Model Context Pro
 - 🤖 MCP Protocol: Implements the Model Context Protocol for standardized AI/ML service interactions
 - 🔧 Easy-to-use API: Simple interface for document management and search
 
-## Installation
 
-1. Clone the repository:
+## 🚀 Quickstart
+
+### 1. Clone the repository
 ```bash
 git clone https://github.com/Hitesh-Saha/RAG-MCP-Server.git
 cd RAG-MCP-Server
 ```
 
-2. Install dependencies:
+### 2. Install dependencies
 ```bash
 uv sync
 ```
 
-## Usage
 
-1. Start the server:
+### 3. Run with Docker (Recommended)
 ```bash
-python rag_server.py
+# Build from source
+docker build -t rag-mcp-server .
+docker run -p 8000:8000 rag-mcp-server
+
+# Or pull from DockerHub (after you push your image):
+docker pull <your-dockerhub-username>/rag-mcp-server:latest
+docker run -p 8000:8000 <your-dockerhub-username>/rag-mcp-server:latest
 ```
 
-2. Available Operations:
+---
 
-### Embed a Document
+## 🧩 VS Code Integration
+
+You can use this MCP server as a backend for VS Code extensions or AI tools that support the Model Context Protocol.
+
+**To use in VS Code:**
+1. Start the server (locally or via Docker as above).
+2. In your VS Code extension or tool, set the MCP server endpoint to:
+	```
+	http://localhost:8000
+	```
+3. Use the available tools (embed, search, list, ask, etc.) from your extension or scripts.
+
+**Tip:** You can also deploy this server to the cloud and connect from VS Code anywhere!
+
+### 4. Or run locally
+```bash
+python server.py
+```
+
+---
+
+## 🛠️ API & Tool Usage
+
+
+### 📥 Embed a Document
 Embed a document into the vector database:
 ```python
-@mcp.tool()
-def embed_document(file_path: str, metadata: Optional[dict] = None) -> str
+embed_document(file_path: str, metadata: Optional[dict] = None) -> EmbedDocumentResponse
+```
+**Response Model:** `EmbedDocumentResponse`
+**Example Response:**
+```
+✅ Document 'example.pdf' embedded! 3 chunks created from 7539 characters. 🚀
 ```
 
-### Search Documents
+
+
+### 🔍 Search Documents
 Search through embedded documents using natural language:
 ```python
-@mcp.tool()
-def search_documents(query: str, top_k: int = 5, min_similarity: float = 0.1) -> str
+search_documents(query: str, top_k: int = 5, min_similarity: float = 0.4) -> SearchDocumentsResponse
+```
+**Response Model:** `SearchDocumentsResponse`
+**Example Response:**
+```
+🔍 Found 2 similar documents! 📄✨
+1. 📄 somatosensory.pdf (chunk 0) | 📊 Similarity: 0.53
+   📝 This is a sample document to showcase page-based formatting...
 ```
 
-### List Documents
+
+
+### 📚 List Documents
 View all documents in the database:
 ```python
-@mcp.tool()
-def list_documents() -> str
+list_documents() -> ListDocumentsResponse
+```
+**Response Model:** `ListDocumentsResponse`
+**Example Response:**
+```
+📚 2 documents in the database! 🗃️
+1. 📄 somatosensory.pdf (3 chunks)
+2. 📄 TopCSSFrameworks.docx (2 chunks)
 ```
 
-### Get Database Stats
+
+
+### 📊 Get Database Stats
 View statistics about the database:
 ```python
-@mcp.tool()
-def get_database_stats() -> str
+get_database_stats() -> DatabaseStatsResponse
+```
+**Response Model:** `DatabaseStatsResponse`
+**Example Response:**
+```
+📊 Database loaded! 2 documents and 5 chunks stored. 🗂️
 ```
 
-### Delete Document
+
+
+### 🗑️ Delete Document
 Remove a document from the database:
 ```python
-@mcp.tool()
-def delete_document(filename: str) -> str
+delete_document(filename: str) -> DeleteDocumentResponse
+```
+**Response Model:** `DeleteDocumentResponse`
+**Example Response:**
+```
+🗑️ Document 'example.pdf' deleted! 3 chunks removed. 👋
 ```
 
-## Technical Details
+### ❓ Ask a Question
+Ask a question and get an answer using the RAG system:
+```python
+ask_question(request: QuestionRequest) -> QuestionAnswer
+```
+**Request Model:** `QuestionRequest`
+**Response Model:** `QuestionAnswer`
+**Example Response:**
+```
+🤖 Answer: The somatosensory system consists of sensors in the skin, muscles, tendons, and joints...
+Sources: somatosensory.pdf
+Confidence: 0.92
+```
+
+### 📄 Get Document Details
+Get detailed information about a specific document chunk by its ID:
+```python
+get_document(document_id: str) -> GetDocumentResponse
+```
+**Response Model:** `GetDocumentResponse`
+**Example Response:**
+```
+{
+	"document": {
+		"id": 3,
+		"filename": "somatosensory.pdf",
+		"content": "This is a sample document...",
+		"chunk_id": 0,
+		"metadata": {},
+		"created_at": "2025-08-20 09:38:11"
+	}
+}
+```
+
+
+---
+
+## ⚙️ Technical Details
 
 - Embedding Model: all-MiniLM-L6-v2
 - Database: SQLite-based vector database
 - Protocol: Model Context Protocol (MCP) via FastMCP
 
-## License
+
+---
+
+## 📄 License
 
 This project is licensed under the terms included in the LICENSE file.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

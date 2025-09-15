@@ -10,3 +10,5 @@ wheels/
 .venv
 rag_database.db
 docker-compose.yml
+.env
+.env.*

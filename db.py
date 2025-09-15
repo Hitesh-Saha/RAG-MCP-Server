@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 import sqlite3
@@ -7,11 +6,12 @@ import PyPDF2
 from docx import Document
 import json
 from models import QuestionAnswer, DocumentChunk, DocumentInfo, EmbedDocumentResponse, DeleteDocumentResponse
+from config import get_Embedder
 
 class RAGDatabase:
     def __init__(self, db_path: str = "rag_database.db"):
         self.db_path = db_path
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.model = get_Embedder()
         self.init_database()
     
     def init_database(self):
@@ -88,7 +88,7 @@ class RAGDatabase:
             filename = Path(file_path).name
             documents_added = 0
             for i, chunk in enumerate(chunks):
-                embedding = self.model.encode(chunk)
+                embedding = self.model.feature_extraction(chunk)
                 embedding_blob = embedding.tobytes()
                 cursor.execute('''
                     INSERT INTO documents (filename, content, chunk_id, embedding, metadata)
@@ -113,7 +113,7 @@ class RAGDatabase:
     
     def search_similar(self, query: str, top_k: int = 5, min_similarity: float = 0.0) -> List[DocumentChunk]:
         """Search for similar documents using vector similarity"""
-        query_embedding = self.model.encode(query)
+        query_embedding = self.model.feature_extraction(query)
         
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
