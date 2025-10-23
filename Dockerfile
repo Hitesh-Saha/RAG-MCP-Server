@@ -50,4 +50,4 @@ ENV UV_SYSTEM_PYTHON=1
 #     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
 # Run your FastMCP server
-CMD ["uv", "run", "python", "server.py"]
+CMD ["uv", "run", "rag_mcp_server"]

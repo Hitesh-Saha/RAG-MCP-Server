@@ -5,11 +5,11 @@ import numpy as np
 import PyPDF2
 from docx import Document
 import json
-from models import QuestionAnswer, DocumentChunk, DocumentInfo, EmbedDocumentResponse, DeleteDocumentResponse
-from config import get_Embedder
+from ..models.models import QuestionAnswer, DocumentChunk, DocumentInfo, EmbedDocumentResponse, DeleteDocumentResponse
+from .config import get_Embedder
 
 class RAGDatabase:
-    def __init__(self, db_path: str = "rag_database.db"):
+    def __init__(self, db_path: str):
         self.db_path = db_path
         self.model = get_Embedder()
         self.init_database()

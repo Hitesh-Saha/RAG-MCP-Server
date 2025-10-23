@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import argparse
 import json
 from typing import Optional, Dict, Any
-from db import RAGDatabase
+from pathlib import Path
+from .core.db import RAGDatabase
 from fastmcp import FastMCP
-from models import (
+from .models.models import (
     QuestionRequest,
     EmbedDocumentResponse,
     SearchDocumentsResponse,
@@ -18,11 +20,13 @@ from models import (
 from dotenv import load_dotenv
 import logging
 import os
+import sys
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize the RAG database
-rag_db = RAGDatabase()
+# Initialize the RAG database with the provided path
+# db_path = os.getenv("RAG_DB_PATH", "src/database/rag_database.db")
+# rag_db = None  # Will be initialized after parsing arguments
 
 # Create FastMCP server
 mcp = FastMCP(
@@ -33,6 +37,10 @@ mcp = FastMCP(
     Use the tools provided to interact with the database.
     """
 )
+
+# Configure logger
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+logger = logging.getLogger("rag_mcp_server")
 
 @mcp.tool()
 def embed_document(file_path: str, metadata: Optional[dict] = None) -> EmbedDocumentResponse:
@@ -196,5 +204,41 @@ async def get_document(document_id: str) -> GetDocumentResponse:
         logger.error(f"Error getting document: {e}")
         return GetDocumentResponse(error=str(e), document_id=document_id)
 
+def main():
+    parser = argparse.ArgumentParser(description="Run the RAG MCP server using HTTP or stdio transport")
+    parser.add_argument("--mode", choices=["http", "stdio"], default=os.getenv("MCP_TRANSPORT", "http"),
+                        help="Transport mode to run the MCP server: 'http' (default) or 'stdio'")
+    parser.add_argument("--host", default=os.getenv("MCP_HOST", "127.0.0.1"), help="Host for HTTP transport")
+    parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", 8000)), help="Port for HTTP transport")
+    parser.add_argument("--db-path", default=os.getenv("RAG_DB_PATH", "src/rag_mcp_server/database/rag_database.db"),
+                        help="Path to the SQLite database file (default: src/rag_mcp_server/database/rag_database.db)")
+    args = parser.parse_args()
+    
+    # Create database directory if it doesn't exist
+    db_path = Path(args.db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize the RAG database with the provided path
+    global rag_db
+    rag_db = RAGDatabase(db_path=str(db_path))
+
+    if args.mode == "http":
+        logger.info(f"Starting MCP server over HTTP on {args.host}:{args.port}")
+        mcp.run(transport="http", host=args.host, port=args.port)
+    else:
+        logger.info("Starting MCP server over stdio")
+        # FastMCP supports multiple transports; if stdio is supported we pass it directly.
+        # If the installed FastMCP does not support stdio transport, this will raise and surface the error.
+        try:
+            mcp.run(transport="stdio")
+        except TypeError:
+            # Fallback: if fastmcp doesn't accept 'stdio' as a transport argument, attempt to call without kwargs
+            # or re-raise to let the user know.
+            try:
+                mcp.run("stdio")
+            except Exception as e:
+                logger.error("Failed to start stdio transport: %s", e)
+                raise
+
 if __name__ == "__main__":
-    mcp.run(transport='http', host='127.0.0.1', port=8000)
+    main()

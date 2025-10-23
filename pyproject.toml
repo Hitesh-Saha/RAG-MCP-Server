@@ -1,7 +1,7 @@
 [project]
-name = "rag-mcp-server"
+name = "rag_mcp_server"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Retrieval Augmented Generation (RAG) MCP server"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -13,3 +13,10 @@ dependencies = [
     "python-docx>=1.2.0",
     "python-dotenv>=1.1.1",
 ]
+
+[project.scripts]
+"rag_mcp_server" = "rag_mcp_server:main"
+
+[build-system]
+requires = ["uv_build >= 0.9.5, <0.10.0"]
+build-backend = "uv_build"

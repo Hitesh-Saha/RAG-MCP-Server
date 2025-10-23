@@ -46,20 +46,179 @@ You can use this MCP server as a backend for VS Code extensions or AI tools that
 1. Start the server (locally or via Docker as above).
 2. In your VS Code extension or tool, set the MCP server endpoint to:
 	```
-	http://localhost:8000
+	http://localhost:8000/mcp
 	```
 3. Use the available tools (embed, search, list, ask, etc.) from your extension or scripts.
 
 **Tip:** You can also deploy this server to the cloud and connect from VS Code anywhere!
 
-### 4. Or run locally
+### 4. Run locally (source or installed)
+
+You can run the server directly from source (useful during development) or install the package and run the provided console script.
+
+From source (no install):
+
 ```bash
-python server.py
+# Run using the src package layout (from repository root)
+PYTHONPATH=src python -m rag_mcp_server.server --mode http --port 8000
+
+# For stdio mode:
+PYTHONPATH=src python -m rag_mcp_server.server --mode stdio
+```
+
+Install in editable mode (recommended for development):
+
+```bash
+pip install -e .
+# then run the console script
+rag-mcp-server --mode http --port 8000
+```
+
+After publishing to PyPI (or installing from wheel), run via the console script or with `uv`:
+
+```bash
+# Console script (installed):
+rag-mcp-server --mode http --port 8000
+
+# Or use uv to run the installed entry point (uv finds the package script):
+uv run rag-mcp-server
 ```
 
 ---
 
-## 🛠️ API & Tool Usage
+## 📦 Packaging & Publishing to PyPI (detailed)
+
+Follow these steps to build, test, and publish the package to PyPI.
+
+1) Prepare metadata
+
+ - Open `pyproject.toml` and ensure the `[project]` table has correct fields: `name`, `version`, `description`, `readme`, `authors`, `license`, `keywords`, and `classifiers`.
+
+Example additions to `[project]`:
+
+```toml
+authors = [ { name = "Your Name", email = "you@example.com" } ]
+license = { text = "MIT" }
+keywords = ["mcp", "rag", "vector", "embedding"]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"License :: OSI Approved :: MIT License",
+	"Programming Language :: Python :: 3",
+]
+```
+
+2) Ensure console script entry point is configured
+
+We added a console script in `pyproject.toml`:
+
+```toml
+[project.scripts]
+rag-mcp-server = "rag_mcp_server.cli:run"
+```
+
+This maps the `rag-mcp-server` command to `rag_mcp_server.cli.run()`.
+
+3) Build distributions
+
+Install build tools (if you don't have them):
+
+```bash
+pip install --upgrade build twine
+```
+
+Build source and wheel:
+
+```bash
+python -m build
+# artifacts appear in dist/
+```
+
+4) Test upload to Test PyPI (recommended)
+
+```bash
+python -m twine upload --repository testpypi dist/*
+
+# Verify install from Test PyPI
+pip install --index-url https://test.pypi.org/simple/ --no-deps rag-mcp-server
+```
+
+5) Publish to PyPI
+
+When ready, upload to the real PyPI:
+
+```bash
+python -m twine upload dist/*
+```
+
+6) Verify
+
+```bash
+pip install rag-mcp-server
+rag-mcp-server --mode http --port 8000
+```
+
+Tips & best practices
+
+- Use a dedicated PyPI account and enable 2FA.
+- Increment the `version` for each release and tag releases in Git (e.g. `git tag v0.1.0`).
+- Add automated publishing via GitHub Actions on tag push to streamline releases (I can add a template workflow if you want).
+- Keep secrets out of the repo; store PyPI API tokens in CI secrets and use Twine in CI for publishing.
+
+## 🧭 Install & run after publishing
+
+Once published to PyPI, users can install and run the server easily.
+
+Install via pip:
+
+```bash
+pip install rag-mcp-server
+```
+
+Run with `uv` (recommended) — `uv` will locate the package's entry point and run it. Example (after installing `uv`):
+
+```bash
+# Run the server (default HTTP on 127.0.0.1:8000)
+uv run rag-mcp-server
+
+# Or run via the console script directly (if project.scripts was configured):
+rag-mcp-server --mode http --port 8000
+```
+
+If you'd rather run the module directly:
+
+```bash
+python -m rag_mcp_server.server --mode http
+```
+
+## 🧪 Smoke test / verification
+
+After installing, try a quick health check (HTTP mode):
+
+```bash
+curl -v http://127.0.0.1:8000/health || true
+```
+
+For stdio mode, use a compliant MCP client that writes Content-Length framed JSON requests and reads framed responses.
+
+## 🐳 Docker notes (packaged)
+
+The included `Dockerfile` already uses `uv` to run the server. When packaging, you can either:
+
+- Build the Docker image from the source (as-is), or
+- Use the PyPI package inside a smaller runtime image (multi-stage build): install the published wheel with `pip install rag-mcp-server` and run the console script.
+
+Example Docker command (after publishing to PyPI):
+
+```Dockerfile
+FROM python:3.12-slim
+RUN pip install rag-mcp-server uv
+CMD ["uv", "run", "rag-mcp-server"]
+```
+
+
+---
+
+## �🛠️ API & Tool Usage
 
 
 ### 📥 Embed a Document
