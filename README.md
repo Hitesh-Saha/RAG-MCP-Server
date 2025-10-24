@@ -1,103 +1,187 @@
 # RAG MCP Server
 
-A Retrieval Augmented Generation (RAG) server implementing the Model Context Protocol (MCP). This server allows you to embed, search, and manage documents using vector database technology.
+A Retrieval Augmented Generation (RAG) server implementing the Model Context Protocol (MCP). This server allows you to embed, search, and manage documents using vector database technology, making it perfect for use with AI tools and Large Language Models (LLMs).
 
-## Features
+## ✨ Features
 
-- 📚 Document Embedding: Support for multiple document formats (PDF, DOCX, TXT, MD)
-- 🔍 Semantic Search: Search through documents using natural language queries
-- 💾 Vector Database: Efficient storage and retrieval of document embeddings
-- 🤖 MCP Protocol: Implements the Model Context Protocol for standardized AI/ML service interactions
-- 🔧 Easy-to-use API: Simple interface for document management and search
+- 📚 **Document Embedding**: Support for multiple document formats (PDF, DOCX, TXT, MD)
+- 🔍 **Semantic Search**: Search through documents using natural language queries
+- 💾 **Vector Database**: Efficient storage and retrieval of document embeddings
+- 🤖 **MCP Protocol**: Implements the Model Context Protocol for standardized AI/ML service interactions
+- 🔧 **Easy-to-use API**: Simple interface for document management and search
+- 🔄 **Dual Mode**: Supports both HTTP and stdio communication modes
 
+## 🚀 Quick Start
 
-## 🚀 Quickstart
+### Prerequisites
 
-### 1. Clone the repository
+- Python 3.12 or higher
+- uv (recommended) or pip for package management
+- Docker (optional, for containerized deployment)
+
+### Installation Methods
+
+#### 1. Using `uv` (Recommended)
+
 ```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone the repository
 git clone https://github.com/Hitesh-Saha/RAG-MCP-Server.git
 cd RAG-MCP-Server
-```
 
-### 2. Install dependencies
-```bash
+# Install dependencies
 uv sync
 ```
 
+#### 2. Using `pip`
 
-### 3. Run with Docker (Recommended)
 ```bash
-# Build from source
-docker build -t rag-mcp-server .
-docker run -p 8000:8000 rag-mcp-server
-
-# Or pull from DockerHub (after you push your image):
-docker pull <your-dockerhub-username>/rag-mcp-server:latest
-docker run -p 8000:8000 <your-dockerhub-username>/rag-mcp-server:latest
+git clone https://github.com/Hitesh-Saha/RAG-MCP-Server.git
+cd RAG-MCP-Server
+pip install -e .
 ```
 
----
+## 🖥️ Running the Server
 
-## 🧩 VS Code Integration
+### 1. Local Run (Source Mode)
 
-You can use this MCP server as a backend for VS Code extensions or AI tools that support the Model Context Protocol.
-
-**To use in VS Code:**
-1. Start the server (locally or via Docker as above).
-2. In your VS Code extension or tool, set the MCP server endpoint to:
-	```
-	http://localhost:8000/mcp
-	```
-3. Use the available tools (embed, search, list, ask, etc.) from your extension or scripts.
-
-**Tip:** You can also deploy this server to the cloud and connect from VS Code anywhere!
-
-### 4. Run locally (source or installed)
-
-You can run the server directly from source (useful during development) or install the package and run the provided console script.
-
-From source (no install):
-
+#### HTTP Mode
 ```bash
-# Run using the src package layout (from repository root)
+# Run using the src package layout
 PYTHONPATH=src python -m rag_mcp_server.server --mode http --port 8000
+```
 
-# For stdio mode:
+#### stdio Mode
+```bash
+# For stdio mode (useful for IDE integrations)
 PYTHONPATH=src python -m rag_mcp_server.server --mode stdio
 ```
 
-Install in editable mode (recommended for development):
+### 2. Using `uv run`
 
 ```bash
-pip install -e .
-# then run the console script
-rag-mcp-server --mode http --port 8000
+# HTTP mode
+uv run rag-mcp-server --mode http --port 8000
+
+# stdio mode
+uv run rag-mcp-server --mode stdio
 ```
 
-After publishing to PyPI (or installing from wheel), run via the console script or with `uv`:
+### 3. Docker Setup
 
 ```bash
-# Console script (installed):
-rag-mcp-server --mode http --port 8000
+# Build the image
+docker build -t rag-mcp-server .
 
-# Or use uv to run the installed entry point (uv finds the package script):
-uv run rag-mcp-server
+# Run in HTTP mode
+docker run -p 8000:8000 rag-mcp-server
+
+# Run in stdio mode
+docker run -i rag-mcp-server --mode stdio
 ```
 
----
+## 🔌 IDE Integration
 
-## 📦 Packaging & Publishing to PyPI (detailed)
+### VS Code Setup
 
-Follow these steps to build, test, and publish the package to PyPI.
+1. Install the Claude AI Assistant or GitHub Copilot extension
 
-1) Prepare metadata
+2. Configure the MCP Server:
+   - Start the RAG MCP server in either HTTP or stdio mode
+   - For HTTP mode, use endpoint: `http://localhost:8000/mcp`
+   - For stdio mode, point the extension to the server process
 
- - Open `pyproject.toml` and ensure the `[project]` table has correct fields: `name`, `version`, `description`, `readme`, `authors`, `license`, `keywords`, and `classifiers`.
+3. VS Code Settings:
+   ```jsonc
+   {
+     "claude.mcp.endpoint": "http://localhost:8000/mcp",  // For HTTP mode
+     // OR
+     "github.copilot.advanced": {
+       "mcpServer": "http://localhost:8000/mcp"  // For HTTP mode
+     }
+   }
+   ```
 
-Example additions to `[project]`:
+### Claude Desktop Setup
 
-```toml
-authors = [ { name = "Your Name", email = "you@example.com" } ]
+1. Start the RAG MCP server in HTTP mode:
+   ```bash
+   uv run rag-mcp-server --mode http --port 8000
+   ```
+
+2. Configure Claude Desktop:
+   - Open Settings
+   - Navigate to the "Advanced" section
+   - Set MCP Server URL to: `http://localhost:8000/mcp`
+   - Click "Test Connection" to verify
+
+## 🧪 Development
+
+### Local Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Hitesh-Saha/RAG-MCP-Server.git
+cd RAG-MCP-Server
+
+# Install in editable mode with dev dependencies
+uv sync
+
+# Run tests
+python -m pytest
+
+# Run with auto-reload for development
+uvicorn rag_mcp_server.server:app --reload --port 8000
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+RAG_DB_PATH=./data/vector_db
+LOG_LEVEL=INFO
+```
+
+## 📦 Building and Distribution
+
+### Build Package
+
+```bash
+# Using uv
+uv pip build .
+
+# Using pip
+pip install build
+python -m build
+```
+
+### Install from Built Package
+
+```bash
+uv pip install dist/rag_mcp_server-0.1.0.whl
+```
+
+## � API Documentation
+
+When running in HTTP mode, visit:
+- API Documentation: `http://localhost:8000/docs`
+- OpenAPI Spec: `http://localhost:8000/openapi.json`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 license = { text = "MIT" }
 keywords = ["mcp", "rag", "vector", "embedding"]
 classifiers = [
