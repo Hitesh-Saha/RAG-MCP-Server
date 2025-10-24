@@ -204,20 +204,26 @@ async def get_document(document_id: str) -> GetDocumentResponse:
         logger.error(f"Error getting document: {e}")
         return GetDocumentResponse(error=str(e), document_id=document_id)
 
-def main():
+def run():
     parser = argparse.ArgumentParser(description="Run the RAG MCP server using HTTP or stdio transport")
     parser.add_argument("--mode", choices=["http", "stdio"], default=os.getenv("MCP_TRANSPORT", "http"),
                         help="Transport mode to run the MCP server: 'http' (default) or 'stdio'")
     parser.add_argument("--host", default=os.getenv("MCP_HOST", "127.0.0.1"), help="Host for HTTP transport")
     parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", 8000)), help="Port for HTTP transport")
-    parser.add_argument("--db-path", default=os.getenv("RAG_DB_PATH", "src/rag_mcp_server/database/rag_database.db"),
-                        help="Path to the SQLite database file (default: src/rag_mcp_server/database/rag_database.db)")
+    parser.add_argument("--db-path", default=os.getenv("RAG_DB_PATH", "./data/rag_database.db"),
+                        help="Path to the SQLite database file (default: ./data/rag_database.db)")
+    parser.add_argument("--hf-key", default=os.getenv("HF_TOKEN", None),
+                        help="Hugging Face API key/token. If provided, will set HUGGINGFACEHUB_API_TOKEN and HF_HUB_TOKEN env vars.")
     args = parser.parse_args()
-    
+
+    # If a Hugging Face key was provided, export it for downstream libraries
+    if args.hf_key:
+        os.environ.setdefault("HF_HUB_TOKEN", args.hf_key)
+
     # Create database directory if it doesn't exist
     db_path = Path(args.db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Initialize the RAG database with the provided path
     global rag_db
     rag_db = RAGDatabase(db_path=str(db_path))
@@ -231,14 +237,11 @@ def main():
         # If the installed FastMCP does not support stdio transport, this will raise and surface the error.
         try:
             mcp.run(transport="stdio")
-        except TypeError:
             # Fallback: if fastmcp doesn't accept 'stdio' as a transport argument, attempt to call without kwargs
             # or re-raise to let the user know.
-            try:
-                mcp.run("stdio")
-            except Exception as e:
-                logger.error("Failed to start stdio transport: %s", e)
-                raise
+        except Exception as e:
+            logger.error("Failed to start stdio transport: %s", e)
+            raise
 
 if __name__ == "__main__":
-    main()
+    run()
